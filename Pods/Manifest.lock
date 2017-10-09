@@ -1,0 +1,28 @@
+PODS:
+  - DZNEmptyDataSet (1.8.1)
+  - UMengUShare/Core (6.4.5):
+    - UMengUShare/Network
+  - UMengUShare/Network (6.4.5)
+  - UMengUShare/Social/AlipayShare (6.4.5):
+    - UMengUShare/Core
+  - UMengUShare/Social/ReducedQQ (6.4.5):
+    - UMengUShare/Core
+  - UMengUShare/Social/ReducedWeChat (6.4.5):
+    - UMengUShare/Core
+  - UMengUShare/UI (6.4.5):
+    - UMengUShare/Core
+
+DEPENDENCIES:
+  - DZNEmptyDataSet (~> 1.8.1)
+  - UMengUShare/Social/AlipayShare
+  - UMengUShare/Social/ReducedQQ
+  - UMengUShare/Social/ReducedWeChat
+  - UMengUShare/UI
+
+SPEC CHECKSUMS:
+  DZNEmptyDataSet: 9525833b9e68ac21c30253e1d3d7076cc828eaa7
+  UMengUShare: a5711c54e640b04e3048e931d2b88d50f9cfa55c
+
+PODFILE CHECKSUM: a4e1ec4f9a9dae60c2bea98f33483fa4e0e7e456
+
+COCOAPODS: 1.1.1
