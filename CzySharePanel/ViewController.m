@@ -42,6 +42,14 @@
 #pragma mark - 分享
 - (void)share:(UIBarButtonItem *)bbi
 {
+    /**
+    显示分享面板
+
+    @param titles 分享平台名称
+    @param imageNames 分享平台图片
+    @param textColor 文字颜色
+    @param textFont 文字字体
+    */
     [[CzyPopView shareManager] showSharePanelWithTitiles:self.titles
                                            andImageNames:self.titles
                                             andTextColor:[UIColor redColor]
