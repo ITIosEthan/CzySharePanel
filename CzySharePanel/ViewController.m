@@ -42,15 +42,10 @@
 #pragma mark - 分享
 - (void)share:(UIBarButtonItem *)bbi
 {
-    CzyPopView *popView = [[CzyPopView alloc] init];
-    popView.frame = self.view.bounds;
-    [self.view addSubview:popView];
-    
-    popView.imageNames = self.titles;
-    popView.titles = self.titles;
-    
-    popView.textColor = [UIColor redColor];
-    popView.textFont = [UIFont systemFontOfSize:12];
+    [[CzyPopView shareManager] showSharePanelWithTitiles:self.titles
+                                           andImageNames:self.titles
+                                            andTextColor:[UIColor redColor]
+                                             andTextFont:[UIFont systemFontOfSize:12]];
 }
 
 #pragma mark - 提示
@@ -58,7 +53,5 @@
 {
     return [[NSAttributedString alloc] initWithString:@"点击右上角分享"];
 }
-
-
 
 @end

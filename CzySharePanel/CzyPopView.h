@@ -15,13 +15,10 @@
 
 #import <UIKit/UIKit.h>
 
-@interface CzyPopView : UIView
-/**平台*/
-@property (nonatomic, strong) NSArray *titles;
-@property (nonatomic, strong) NSArray *imageNames;
+@interface CzyPopView : NSObject
 
-/**分享平台名字颜色字体*/
-@property (nonatomic, strong) UIColor *textColor;
-@property (nonatomic, strong) UIFont *textFont;
++ (instancetype)shareManager;
+
+- (void)showSharePanelWithTitiles:(NSArray *)titles andImageNames:(NSArray *)imageNames andTextColor:(UIColor *)textColor andTextFont:(UIFont *)textFont;
 
 @end

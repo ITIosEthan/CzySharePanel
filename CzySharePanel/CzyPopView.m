@@ -21,6 +21,13 @@
 
 /**平台*/
 @property (nonatomic, strong) NSMutableArray *platforms;
+/**平台*/
+@property (nonatomic, strong) NSArray *titles;
+@property (nonatomic, strong) NSArray *imageNames;
+
+/**分享平台名字颜色字体*/
+@property (nonatomic, strong) UIColor *textColor;
+@property (nonatomic, strong) UIFont *textFont;
 /**背景*/
 @property (nonatomic, strong) UIVisualEffectView *visualEffectView;
 /**弹框动画计时器*/
@@ -32,6 +39,8 @@
 @end
 
 @implementation CzyPopView
+
+static CzyPopView *popView = nil;
 
 #pragma mark - Getter
 - (NSMutableArray *)platforms
@@ -51,58 +60,25 @@
     return _timer;
 }
 
-#pragma mark - Setter
-- (void)setImageNames:(NSArray *)imageNames
+#pragma mark - shareManager
++ (instancetype)shareManager
 {
-    _imageNames = imageNames;
-    
-    [self setupPlatformUI];
-
-    for (NSInteger i=10001; i<10001+_imageNames.count; i++) {
-        
-        CzyCustomBtn *btn = [_visualEffectView viewWithTag:i];
-        
-        if ([_imageNames[i-10001] length] == 0) {
-            btn.imageView.backgroundColor = [UIColor lightGrayColor];
-        }else{
-            btn.backgroundColor = [UIColor clearColor];
-            btn.imageView.image = [UIImage imageNamed:_imageNames[i-10001]];
-        }
-    }
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        popView= [[CzyPopView alloc] init];
+    });
+    return popView;
 }
 
-- (void)setTitles:(NSArray *)titles
+#pragma mark - showSharePanelWithTitiles
+- (void)showSharePanelWithTitiles:(NSArray *)titles andImageNames:(NSArray *)imageNames andTextColor:(UIColor *)textColor andTextFont:(UIFont *)textFont
 {
     _titles = titles;
-    
-    [self setupPlatformUI];
-    
-    for (NSInteger i=10001; i<10001+_imageNames.count; i++) {
-        
-        CzyCustomBtn *btn = [_visualEffectView viewWithTag:i];
-        
-        [btn setTitle:_imageNames[i-10001] forState:UIControlStateNormal];
-    }
-}
-
-- (void)setTextColor:(UIColor *)textColor
-{
+    _imageNames = imageNames;
     _textColor = textColor;
-    
-    for (CzyCustomBtn *btn in self.platforms) {
-        
-        [btn setTitleColor:textColor forState:UIControlStateNormal];
-    }
-}
-
-- (void)setTextFont:(UIFont *)textFont
-{
     _textFont = textFont;
     
-    for (CzyCustomBtn *btn in self.platforms) {
-        
-        btn.titleLabel.font = textFont;
-    }
+    [self setupPlatformUI];
 }
 
 #pragma mark - 初始化平台
@@ -128,17 +104,23 @@
     CGFloat h = w;
     for (NSInteger i=0; i<2; i++) {
         
-        if (num >= _titles.count-1) {
+        if (num > _titles.count-1) {
             break;
         }
         
         for (NSInteger j=0; j<3; j++) {
             
+            if (num > _titles.count-1) {
+                break;
+            }
+            
             CzyCustomBtn *btn = [CzyCustomBtn buttonWithType:UIButtonTypeCustom];
             btn.frame = CGRectMake((j+1)*margin+j*w, CZY_FULL_HEIGHT/2+i*h, w, h);
             [btn setTitle:_titles[num] forState:UIControlStateNormal];
+            btn.imageView.image = [UIImage imageNamed:_imageNames[num]];
             btn.imageView.transform = CGAffineTransformMakeScale(1.8, 1.8);
-            [btn setTitleColor:[UIColor blueColor] forState:UIControlStateNormal];
+            [btn setTitleColor:_textColor forState:UIControlStateNormal];
+            btn.titleLabel.font = _textFont;
             [btn addTarget:self action:@selector(shareWithPlatform:) forControlEvents:UIControlEventTouchUpInside];
             [_visualEffectView addSubview:btn];
             
@@ -154,14 +136,8 @@
             
             //开始定时器
             [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-            
-            
-            if (num >= _titles.count-1) {
-                break;
-            }
-            
-            num++;
 
+            num++;
         }
     }
     
@@ -174,7 +150,7 @@
         
         [self destroyTimer];
         
-        _upIndex = 0;
+//        _upIndex = 0;
         
         return;
     }
@@ -183,15 +159,20 @@
     
     _upIndex++;
     
+    NSLog(@"outter _upindex = %ld", _upIndex);
+    
     [UIView animateWithDuration:0.5 delay:0 usingSpringWithDamping:0.8 initialSpringVelocity:0.5 options:UIViewAnimationOptionCurveEaseInOut animations:^{
         
         //归位
         currentBtn.transform = CGAffineTransformIdentity;
         
-    } completion:^(BOOL finished) {
+    } completion:^(BOOL finished) {        
+
+        NSLog(@"_upindex = %ld", _upIndex);
         
         //弹完了打开交互 避免乱弹
         if (_upIndex == self.platforms.count) {
+            
             _visualEffectView.userInteractionEnabled = YES;
         }
     }];
@@ -217,7 +198,6 @@
         
     } completion:^(BOOL finished) {
         
-        
         if (_downIndex == 0) {
             
             [self destroyView];
@@ -229,7 +209,6 @@
 #pragma mark - 选择分享
 - (void)shareWithPlatform:(UIButton *)sender
 {
-    NSLog(@"tag = %ld", sender.tag);
     UMSocialPlatformType type;
     
     switch (sender.tag) {
@@ -341,19 +320,16 @@
                 UMSocialLogInfo(@"response data is %@",data);
             }
         }
-//        [self alertWithError:error];
     }];
 }
 
-#pragma mark - 提示
-- (NSAttributedString *)titleForEmptyDataSet:(UIScrollView *)scrollView
-{
-    return [[NSAttributedString alloc] initWithString:@"点击右上角分享"];
-}
 
 #pragma mark - #pragma mark - 分享面板消失 没弹完所有平台默认关闭交互(1.控制交互的方式控制弹框)
 - (void)tapDismiss:(UITapGestureRecognizer *)tap
 {
+    /**移除popUp的计时器*/
+    [self destroyTimer];
+    
     self.timer = [NSTimer scheduledTimerWithTimeInterval:CZY_POP_DURATION target:self selector:@selector(popDown:) userInfo:nil repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
@@ -361,25 +337,19 @@
 #pragma mark - 移除定时器
 - (void)destroyTimer
 {
-    [self.timer invalidate];
-    self.timer = nil;
+    if (self.timer) {
+        [self.timer invalidate];
+        self.timer = nil;
+    }
 }
 
 #pragma mark - 移除视图
 - (void)destroyView
 {
-    [_visualEffectView removeFromSuperview];
-    _visualEffectView = nil;
+    if (_visualEffectView) {
+        [_visualEffectView removeFromSuperview];
+        _visualEffectView = nil;
+    }
 }
-
-
-
-/*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/
 
 @end
